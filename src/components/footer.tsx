@@ -18,7 +18,7 @@ export function Footer() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  ⚽ Football Challenge
+                  ⚽ Footy Genius
                 </motion.span>
               </Link>
               <p className="text-sm text-muted-foreground">
@@ -70,9 +70,7 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col sm:flex-row justify-between items-center mt-8 pt-8 border-t text-sm text-muted-foreground">
-            <p>
-              &copy; {currentYear} Football Challenge. All rights reserved.
-            </p>
+            <p>&copy; {currentYear} Footy Genius. All rights reserved.</p>
             <div className="flex space-x-4 mt-4 sm:mt-0">
               <Link
                 href="/privacy"

@@ -5,12 +5,17 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  // Enable appropriate features for serverless environments
+  previewFeatures = ["metrics"]
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Recommended for Vercel serverless functions
+  directUrl = env("DIRECT_URL")
+  // Can also use connectionLimit configuration instead if available
 }
 
 model User {
@@ -32,14 +37,30 @@ model User {
 }
 
 model Challenge {
-  id            String             @id @default(cuid())
-  teamsJson     String // JSON string of teams the player has played for
-  correctAnswer String // Player name
-  difficulty    Int                @default(1) // 1-5 scale
-  points        Int                @default(10)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  attempts      ChallengeAttempt[]
+  id                String             @id @default(cuid())
+  type              String
+  name              String
+  description       String
+  difficulty        Int                @default(1) // 1-5 scale
+  backgroundImage   String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  questions         Question[]
+  challengeAttempts ChallengeAttempt[]
+}
+
+model Question {
+  id            String    @id @default(cuid())
+  correctAnswer String
+  points        Int       @default(10)
+  hint          String?
+  teams         String? // JSON string of teams array
+  club          String?
+  nationality   String?
+  challenge     Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  challengeId   String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model ChallengeAttempt {
@@ -51,6 +72,7 @@ model ChallengeAttempt {
   completed    Boolean   @default(false)
   correct      Boolean   @default(false)
   attemptsUsed Int       @default(0)
+  score        Int       @default(0)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -74,10 +96,12 @@ model Battle {
 
 model BattleRound {
   id             String   @id @default(cuid())
-  battle         Battle   @relation(fields: [battleId], references: [id])
+  battle         Battle   @relation(fields: [battleId], references: [id], onDelete: Cascade)
   battleId       String
   roundNumber    Int
-  teamsJson      String // JSON string of teams the player has played for
+  teamsJson      String? // JSON string of teams the player has played for
+  club           String?
+  nationality    String?
   correctAnswer  String // Player name
   player1Guess   String?
   player2Guess   String?

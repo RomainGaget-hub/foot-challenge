@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Football Challenge',
+  title: 'Footy Genius',
   description:
     'Test your football knowledge by guessing players from their career history',
 };

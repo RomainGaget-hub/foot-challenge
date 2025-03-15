@@ -18,7 +18,6 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { mockBattles, mockUsers } from '@/data/mock-data';
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {
   Dialog,
@@ -34,7 +33,6 @@ import { Label } from '@/components/ui/label';
 
 export default function BattlesPage() {
   const router = useRouter();
-  const { data: session } = useSession();
   const [username, setUsername] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 

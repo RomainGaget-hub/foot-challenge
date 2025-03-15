@@ -51,7 +51,7 @@ export function Navbar() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                ⚽ Football Challenge
+                ⚽ Footy Genius
               </motion.span>
             </Link>
 

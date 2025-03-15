@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { mockChallenges } from '@/data/mock-data';
 import { persist } from 'zustand/middleware';
 
 export interface Question {
@@ -29,6 +28,9 @@ interface GameState {
   correctAnswers: string[];
   currentBattleId: string | null;
   challengeScores: Record<string, number>;
+  challenges: Challenge[] | null;
+  loading: boolean;
+  error: string | null;
 
   // Actions
   startChallenge: (challengeId: string) => void;
@@ -36,6 +38,8 @@ interface GameState {
   resetGame: () => void;
   startBattle: (battleId: string) => void;
   endBattle: () => void;
+  fetchChallenges: () => Promise<void>;
+  fetchChallenge: (challengeId: string) => Promise<Challenge | null>;
   getCurrentChallenge: () => Challenge | null;
   getCurrentQuestion: () => Question | null;
   getRemainingAttempts: (
@@ -56,8 +60,78 @@ export const useGameStore = create<GameState>()(
       correctAnswers: [],
       currentBattleId: null,
       challengeScores: {},
+      challenges: null,
+      loading: false,
+      error: null,
+
+      fetchChallenges: async () => {
+        set({ loading: true, error: null });
+        try {
+          const response = await fetch('/api/challenges');
+          if (!response.ok) {
+            throw new Error('Failed to fetch challenges');
+          }
+          const data = await response.json();
+          set({ challenges: data, loading: false });
+        } catch (error) {
+          console.error('Error fetching challenges:', error);
+          set({
+            error:
+              error instanceof Error ? error.message : 'Unknown error',
+            loading: false,
+          });
+        }
+      },
+
+      fetchChallenge: async (challengeId: string) => {
+        set({ loading: true, error: null });
+        try {
+          const response = await fetch(`/api/challenges/${challengeId}`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch challenge');
+          }
+          const data = await response.json();
+
+          // Update the challenges in the store if they exist
+          set((state) => {
+            const existingChallenges = state.challenges || [];
+            const challengeIndex = existingChallenges.findIndex(
+              (c) => c.id === challengeId
+            );
+
+            if (challengeIndex >= 0) {
+              // Replace the existing challenge
+              const updatedChallenges = [...existingChallenges];
+              updatedChallenges[challengeIndex] = data;
+              return { challenges: updatedChallenges, loading: false };
+            } else {
+              // Add the new challenge
+              return {
+                challenges: [...existingChallenges, data],
+                loading: false,
+              };
+            }
+          });
+
+          return data;
+        } catch (error) {
+          console.error('Error fetching challenge:', error);
+          set({
+            error:
+              error instanceof Error ? error.message : 'Unknown error',
+            loading: false,
+          });
+          return null;
+        }
+      },
 
       startChallenge: (challengeId) => {
+        // Load the challenge data if not already loaded
+        const currentChallenge = get().getCurrentChallenge();
+        if (!currentChallenge || currentChallenge.id !== challengeId) {
+          get().fetchChallenge(challengeId);
+        }
+
         // Clear previous answers for this challenge
         set((state) => {
           const filteredAnswers = state.correctAnswers.filter(
@@ -166,11 +240,11 @@ export const useGameStore = create<GameState>()(
       },
 
       getCurrentChallenge: () => {
-        const { currentChallengeId } = get();
-        if (!currentChallengeId) return null;
+        const { currentChallengeId, challenges } = get();
+        if (!currentChallengeId || !challenges) return null;
 
         return (
-          mockChallenges.find(
+          challenges.find(
             (challenge) => challenge.id === currentChallengeId
           ) || null
         );

@@ -100,6 +100,7 @@ export default function ChallengePage({
     if (remainingTime === 0 && !isSubmitting && !isGameCompleted) {
       handleTimeUp();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remainingTime, isSubmitting, isGameCompleted]);
 
   if (!challenge || !currentQuestion) {
